@@ -1,0 +1,15 @@
+{
+  "name": "bot",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/node-telegram-bot-api": "^0.64.7",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
