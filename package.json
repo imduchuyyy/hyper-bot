@@ -1,5 +1,5 @@
 {
-  "name": "@hyper-bot/database",
+  "name": "hyper-bot",
   "private": true,
   "scripts": {
     "build": "turbo build",

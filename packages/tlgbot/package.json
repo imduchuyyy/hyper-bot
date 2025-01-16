@@ -1,5 +1,5 @@
 {
-  "name": "@hyper-bot/database",
+  "name": "@hyper-bot/tlgbot",
   "module": "index.ts",
   "type": "module",
   "exports": {
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hyper-bot/config": "*",
-    "mongoose": "^8.9.5"
+    "mongoose": "^8.9.5",
+    "node-telegram-bot-api": "^0.66.0"
   }
 }

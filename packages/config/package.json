@@ -1,5 +1,5 @@
 {
-  "name": "@hyper-bot/database",
+  "name": "@hyper-bot/config",
   "module": "index.ts",
   "type": "module",
   "exports": {
@@ -12,7 +12,6 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@hyper-bot/config": "*",
     "mongoose": "^8.9.5"
   }
 }
