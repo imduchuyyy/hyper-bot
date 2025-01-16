@@ -1,5 +1,5 @@
 {
-  "name": "nft-kit",
+  "name": "@hyper-bot/database",
   "private": true,
   "scripts": {
     "build": "turbo build",

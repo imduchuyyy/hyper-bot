@@ -1,14 +1,31 @@
-import TelegramBot from "node-telegram-bot-api"
+import TelegramBot, { type MessageType } from "node-telegram-bot-api"
 
 const bot = new TelegramBot(process.env.BOT_TOKEN || "")
-
 const testUserId = 6709422028;
+const testGroupId = -1002057302172
 
 const main = async () => {
   console.log("Start bot")
-  bot.onText(/\/start/, async (msg) => {
+
+  bot.onText(/\/register (.+)/, async (msg: any) => {
     console.log("msg", msg)
-    bot.sendMessage(msg.chat.id, "Hello, I'm a bot!")
+    const admins = await bot.getChatAdministrators(msg.chat.id)
+    if (!admins.find((admin) => admin.user.id === msg.from.id)) {
+      bot.sendMessage(msg.chat.id, "You are not admin!")
+      return
+    }
+    const chat = await bot.getChat(msg.chat.id)
+
+    if (!chat.permissions?.can_invite_users || !chat.permissions?.can_send_messages) {
+      bot.sendMessage(msg.chat.id, "Please enable permission for bot!")
+      return
+    }
+
+    bot.sendMessage(msg.chat.id, "Register new group!")
+  })
+
+  bot.onText(/\/help/, async (msg) => {
+    bot.sendMessage(msg.chat.id, "Hello, I'm a bot built by @imterryyy!")
   })
 
   bot.onText(/\/invite/, async (msg) => {
@@ -29,6 +46,9 @@ const main = async () => {
     console.log("msg", msg)
     bot.sendMessage(msg.chat.id, "Hello new member join!")
   })
+
+  const chat = await bot.getChat(testGroupId)
+  console.log(chat)
 
   bot.startPolling()
 }
