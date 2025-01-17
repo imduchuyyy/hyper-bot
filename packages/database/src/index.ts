@@ -12,3 +12,5 @@ export const connectToDatabase = async () => {
 
 export * from "./groups"
 export * from "./users"
+export * from "./requests"
+export * from "./joined"

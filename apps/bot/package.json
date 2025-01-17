@@ -9,6 +9,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@hyper-bot/blockchain": "*",
     "@hyper-bot/config": "*",
     "@hyper-bot/database": "*",
     "@hyper-bot/tlgbot": "*",

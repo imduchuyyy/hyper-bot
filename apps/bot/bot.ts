@@ -1,9 +1,27 @@
-import { Groups, Users } from "@hyper-bot/database";
-import { isAddress } from "viem";
-import { bot } from "@hyper-bot/tlgbot";
+import { Groups, Users, Requests, Joined } from "@hyper-bot/database";
+import { createPublicClient, erc721Abi, http, isAddress, isHash } from "viem";
+import { bot, sendInviteLink } from "@hyper-bot/tlgbot";
+import { viction } from "viem/chains";
+import { isHolder } from "@hyper-bot/blockchain";
+import type { ParseMode } from "node-telegram-bot-api";
 
 const testUserId = 6709422028;
 const testGroupId = -1002057302172;
+
+const client = createPublicClient({
+  chain: viction,
+  transport: http(),
+});
+
+const generateRandomString = (length: number): string => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
 
 bot.onText(/\/register (.+)/, async (msg: any) => {
   if (!(msg.chat.type === "supergroup")) {
@@ -25,7 +43,7 @@ bot.onText(/\/register (.+)/, async (msg: any) => {
     return;
   }
 
-  const exitedGroup = await Groups.findOne({ chatId: msg.chat.id });
+  const exitedGroup = await Groups.findOne({ groupId: msg.chat.id });
   if (exitedGroup) {
     bot.sendMessage(msg.chat.id, "Group already registered!");
     return;
@@ -37,7 +55,7 @@ bot.onText(/\/register (.+)/, async (msg: any) => {
     return;
   }
   const group = new Groups({
-    chatId: msg.chat.id,
+    groupId: msg.chat.id,
     address,
   });
   await group.save();
@@ -45,53 +63,97 @@ bot.onText(/\/register (.+)/, async (msg: any) => {
   bot.sendMessage(msg.chat.id, "Register new group!");
 });
 
+bot.onText(/\/start (.+)/, async (msg: any) => {
+  if (msg.text.split(" ").length > 1) {
+    const groupId = msg.text.split(" ")[1];
+    const group = await Groups.findOne({ groupId: groupId });
+    const groupInfo = await bot.getChat(groupId);
+    if (!group) {
+      bot.sendMessage(msg.chat.id, "Group not registered!");
+      return;
+    }
+
+    const user = await Users.findOne({ userId: msg.from.id });
+    if (!user) {
+      const newUser = new Users({
+        userId: msg.from.id,
+        userName: msg.from.username,
+        addresses: [],
+      });
+
+      await newUser.save();
+    } else {
+      for (const address of user.addresses) {
+        if (await isHolder(group.address, address)) {
+          await sendInviteLink(groupId, groupInfo.title, msg.from.id);
+          return;
+        }
+      }
+    }
+    const message = `
+    Click the link below to verify your wallet:`;
+    const opts = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Verify your wallet",
+              url: `https://hyper-bot.vercel.app/verify?groupId=${groupId}&userId=${msg.from.id}`,
+            },
+          ],
+        ],
+      },
+    };
+
+    bot.sendMessage(msg.from.id, message, opts);
+  }
+});
+
+bot.on("callback_query", async (msg: any) => {
+  if (msg.data == "add_wallet") {
+    console.log(msg);
+    console.log("Add new wallet");
+    const requestId = generateRandomString(10);
+    const newRequest = new Requests({
+      userId: msg.from.id,
+      requestId,
+    });
+
+    await newRequest.save();
+
+    const message = `
+    Click the link below to verify your wallet:
+    `;
+
+    const opts = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Verify your wallet",
+              url: "https://hyper-bot.vercel.app/verify?requestId=" + requestId,
+            },
+          ],
+        ],
+      },
+    };
+
+    bot.sendMessage(msg.from.id, message, opts);
+  }
+});
+
 bot.onText(/\/help/, async (msg) => {
   bot.sendMessage(msg.chat.id, "Hello, I'm a bot built by @imterryyy!");
 });
 
-bot.onText(/\/start/, async (msg: any) => {
-  if (!(msg.chat.type === "private")) {
-    return;
-  }
-
-  const user = await Users.findOne({ userId: msg.from.id });
-  if (!user) {
-    console.log("msg", msg);
-    const newUser = new Users({
-      userId: msg.from.id,
-      userName: msg.from.username,
-    });
-    // await newUser.save();
-  }
-
-  const message = `
-    Your wallets:
-  `;
-
-  const opts = {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: 'Re-verify',
-            url: 'https://google.com'
-          }
-        ],
-        [
-          {
-            text: 'Add new wallet',
-            url: 'https://google.com'
-          }
-        ]
-      ]
-    }
-  }
-  bot.sendMessage(msg.chat.id, message, opts);
+bot.onText(/\/invite_link/, async (msg) => {
+  const me = await bot.getMe();
+  const inviteLink = `https://t.me/${me.username}?start=${msg.chat.id}`;
+  bot.sendMessage(msg.chat.id, `Invite link: ${inviteLink}`);
 });
 
 bot.onText(/\/invite/, async (msg) => {
   const inviteLink = await bot.createChatInviteLink(msg.chat.id, {
-    expire_date: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
     creates_join_request: true,
   });
   await bot.sendMessage(testUserId, `Invite link: ${inviteLink.invite_link}`);
@@ -104,10 +166,26 @@ bot.onText(/\/remove/, async (msg) => {
 });
 
 bot.on("chat_join_request", async (msg) => {
-  console.log("msg", msg);
-  bot.sendMessage(msg.chat.id, "Hello new member join!");
+  const userInfo = await Users.findOne({ userId: msg.from.id });
+  const groupInfo = await Groups.findOne({ groupId: msg.chat.id });
+
+  for (const address of userInfo.addresses) {
+    const balance = await client.readContract({
+      address: groupInfo.address,
+      abi: erc721Abi,
+      functionName: "balanceOf",
+      args: [address],
+    });
+
+    if (balance !== 0n) {
+      const joined = new Joined({
+        groupId: msg.chat.id,
+        userId: msg.from.id,
+      });
+      await joined.save();
+      await bot.approveChatJoinRequest(msg.chat.id, msg.from.id);
+    }
+  }
 });
 
-export {
-  bot
-}
+export { bot };

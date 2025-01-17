@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 
 export interface IGroup {
-  chatId: string;
-  tokenAddress: string;
+  groupId: string;
+  address: string;
 }
 
-export const Groups = mongoose.model<IGroup>("Group", new mongoose.Schema({
-  chatId: String,
-  tokenAddress: String
+export const Groups = mongoose.models.Group ?? mongoose.model<IGroup>("Group", new mongoose.Schema({
+  groupId: String,
+  address: String,
 }));
