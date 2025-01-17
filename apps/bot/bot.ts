@@ -97,7 +97,7 @@ bot.onText(/\/start (.+)/, async (msg: any) => {
           [
             {
               text: "Verify your wallet",
-              url: `https://hyper-bot.vercel.app/verify?groupId=${groupId}&userId=${msg.from.id}`,
+              url: `https://hyper-bot-verify.vercel.app/verify?groupId=${groupId}&userId=${msg.from.id}`,
             },
           ],
         ],
@@ -107,40 +107,6 @@ bot.onText(/\/start (.+)/, async (msg: any) => {
     bot.sendMessage(msg.from.id, message, opts);
   }
 });
-
-bot.on("callback_query", async (msg: any) => {
-  if (msg.data == "add_wallet") {
-    console.log(msg);
-    console.log("Add new wallet");
-    const requestId = generateRandomString(10);
-    const newRequest = new Requests({
-      userId: msg.from.id,
-      requestId,
-    });
-
-    await newRequest.save();
-
-    const message = `
-    Click the link below to verify your wallet:
-    `;
-
-    const opts = {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Verify your wallet",
-              url: "https://hyper-bot.vercel.app/verify?requestId=" + requestId,
-            },
-          ],
-        ],
-      },
-    };
-
-    bot.sendMessage(msg.from.id, message, opts);
-  }
-});
-
 bot.onText(/\/help/, async (msg) => {
   bot.sendMessage(msg.chat.id, "Hello, I'm a bot built by @imterryyy!");
 });
