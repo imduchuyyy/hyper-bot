@@ -23,10 +23,6 @@ const generateRandomString = (length: number): string => {
 };
 
 bot.onText(/\/register (.+)/, async (msg: any) => {
-  if (!(msg.chat.type === "supergroup")) {
-    return;
-  }
-
   const admins = await bot.getChatAdministrators(msg.chat.id);
   if (!admins.find((admin) => admin.user.id === msg.from.id)) {
     bot.sendMessage(msg.chat.id, "You are not admin!");
