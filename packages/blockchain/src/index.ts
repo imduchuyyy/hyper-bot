@@ -1,8 +1,8 @@
 import { createPublicClient, erc721Abi, http, type Hex } from "viem";
-import { viction } from "viem/chains";
+import { mainnet, viction } from "viem/chains";
 
 export const client = createPublicClient({
-  chain: viction,
+  chain: mainnet,
   transport: http(),
 });
 

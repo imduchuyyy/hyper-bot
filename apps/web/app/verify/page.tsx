@@ -54,10 +54,30 @@ const VerifyPage = async ({ searchParams }: any) => {
   };
 
   return (
-    <div>
-      <div>Verify</div>
-      <div>User: {user.userName}</div>
-      <div>Group: {groupInfo.title}</div>
+    <div className="max-w-md mx-auto mt-10 p-6 bg-gray-800 shadow-md rounded-lg">
+      <h1 className="text-2xl font-bold mb-6 text-center text-gray-100">
+        Verify wallet
+      </h1>
+      <div className="mb-4">
+        <label className="block text-gray-300 font-semibold mb-2">Username:</label>
+        <input
+          type="text"
+          value={user.userName}
+          readOnly
+          disabled
+          className="w-full px-4 py-2 border rounded-md bg-gray-700 text-gray-300 border-gray-600"
+        />
+      </div>
+      <div className="mb-6">
+        <label className="block text-gray-300 font-semibold mb-2">Group:</label>
+        <input
+          type="text"
+          value={groupInfo.title}
+          readOnly
+          disabled
+          className="w-full px-4 py-2 border rounded-md bg-gray-700 text-gray-300 border-gray-600"
+        />
+      </div>
       <VerifyButton
         submitSignature={submitSignature}
         messageToSign={messageToSign}

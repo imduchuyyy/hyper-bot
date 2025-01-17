@@ -1,9 +1,8 @@
-import { Groups, Users, Requests, Joined } from "@hyper-bot/database";
-import { createPublicClient, erc721Abi, http, isAddress, isHash } from "viem";
+import { Groups, Users, Requests } from "@hyper-bot/database";
+import { checksumAddress, createPublicClient, erc721Abi, http, isAddress } from "viem";
 import { bot, sendInviteLink } from "@hyper-bot/tlgbot";
 import { viction } from "viem/chains";
 import { isHolder } from "@hyper-bot/blockchain";
-import type { ParseMode } from "node-telegram-bot-api";
 
 const testUserId = 6709422028;
 const testGroupId = -1002057302172;
@@ -56,7 +55,7 @@ bot.onText(/\/register (.+)/, async (msg: any) => {
   }
   const group = new Groups({
     groupId: msg.chat.id,
-    address,
+    address: checksumAddress(address),
   });
   await group.save();
 
@@ -152,13 +151,6 @@ bot.onText(/\/invite_link/, async (msg) => {
   bot.sendMessage(msg.chat.id, `Invite link: ${inviteLink}`);
 });
 
-bot.onText(/\/invite/, async (msg) => {
-  const inviteLink = await bot.createChatInviteLink(msg.chat.id, {
-    creates_join_request: true,
-  });
-  await bot.sendMessage(testUserId, `Invite link: ${inviteLink.invite_link}`);
-});
-
 bot.onText(/\/remove/, async (msg) => {
   await bot.unbanChatMember(msg.chat.id, testUserId, {
     only_if_banned: false,
@@ -178,11 +170,6 @@ bot.on("chat_join_request", async (msg) => {
     });
 
     if (balance !== 0n) {
-      const joined = new Joined({
-        groupId: msg.chat.id,
-        userId: msg.from.id,
-      });
-      await joined.save();
       await bot.approveChatJoinRequest(msg.chat.id, msg.from.id);
     }
   }

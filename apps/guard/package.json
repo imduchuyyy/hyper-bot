@@ -1,0 +1,17 @@
+{
+  "name": "guard",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@hyper-bot/blockchain": "*",
+    "@hyper-bot/database": "*",
+    "@hyper-bot/tlgbot": "*",
+    "viem": "^2.22.9"
+  }
+}
