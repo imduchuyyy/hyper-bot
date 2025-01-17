@@ -22,7 +22,7 @@ const VerifyButton = ({ submitSignature, messageToSign }: Props) => {
       message: messageToSign,
     });
 
-    submitSignature(checksumAddress(address), signature);
+    await submitSignature(checksumAddress(address), signature);
     window.close();
   };
 
